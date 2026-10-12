@@ -13,6 +13,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var username: String = "screen"
     public var allowPublicAccess: Bool = false
     public var autoStartServer: Bool = false
+    public var showMenuBarIcon: Bool = true
 
     public static let portRange = 1...65535
     public static let intervalRange = 50...10_000
@@ -34,6 +35,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         username = try c.decodeIfPresent(String.self, forKey: .username) ?? d.username
         allowPublicAccess = try c.decodeIfPresent(Bool.self, forKey: .allowPublicAccess) ?? d.allowPublicAccess
         autoStartServer = try c.decodeIfPresent(Bool.self, forKey: .autoStartServer) ?? d.autoStartServer
+        showMenuBarIcon = try c.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? d.showMenuBarIcon
     }
 
     /// Clamps numeric fields into their valid ranges.

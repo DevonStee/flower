@@ -52,6 +52,7 @@ import Testing
         #expect(s.isPrivate)
         #expect(s.intervalMs == 500)
         #expect(s.username == "screen")
+        #expect(s.showMenuBarIcon)
     }
 
     @Test func roundTrips() throws {

@@ -69,6 +69,10 @@ struct SettingsView: View {
 
             Section("General") {
                 Toggle("Start server automatically", isOn: $model.settings.autoStartServer)
+                Toggle(isOn: $model.settings.showMenuBarIcon) {
+                    Text("Show icon in menu bar")
+                    Text("When hidden, open Flower again from Spotlight or Applications to show this window.")
+                }
                 Toggle("Launch at login", isOn: Binding(
                     get: { model.launchAtLogin },
                     set: { model.setLaunchAtLogin($0) }

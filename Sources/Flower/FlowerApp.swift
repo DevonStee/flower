@@ -2,26 +2,64 @@ import SwiftUI
 
 @main
 struct FlowerApp: App {
-    @State private var model = AppModel()
+    @NSApplicationDelegateAdaptor private var delegate: AppDelegate
 
     var body: some Scene {
-        MenuBarExtra {
-            MenuContent(model: model)
+        @Bindable var model = delegate.model
+        MenuBarExtra(isInserted: $model.settings.showMenuBarIcon) {
+            MenuContent(model: model, settingsWindow: delegate.settingsWindow)
         } label: {
             Image(nsImage: .menuBarDot(active: model.isRunning))
         }
+    }
+}
 
-        Window("Flower", id: "settings") {
-            SettingsView(model: model)
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    let model = AppModel()
+    lazy var settingsWindow = SettingsWindowController(model: model)
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        if AppModel.showsWindowAtLaunch {
+            settingsWindow.show()
         }
-        .windowResizability(.contentSize)
-        .defaultLaunchBehavior(AppModel.showsWindowAtLaunch ? .presented : .suppressed)
+    }
+
+    /// Opening Flower again (Spotlight, Launchpad, Finder) brings up the settings window —
+    /// the only way back in when the menu bar icon is hidden.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        settingsWindow.show()
+        return false
+    }
+}
+
+/// AppKit-owned settings window, so it can be shown without a menu bar entry point.
+@MainActor
+final class SettingsWindowController {
+    private let window: NSWindow
+
+    init(model: AppModel) {
+        let hosting = NSHostingController(rootView: SettingsView(model: model))
+        hosting.sizingOptions = []
+        window = NSWindow(contentViewController: hosting)
+        window.title = "Flower"
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.setContentSize(NSSize(width: 480, height: 640))
+        window.contentMinSize = NSSize(width: 480, height: 320)
+        window.contentMaxSize = NSSize(width: 480, height: 2000)
+        window.isReleasedWhenClosed = false
+        window.center()
+    }
+
+    func show() {
+        NSApp.activate()
+        window.makeKeyAndOrderFront(nil)
     }
 }
 
 struct MenuContent: View {
     let model: AppModel
-    @Environment(\.openWindow) private var openWindow
+    let settingsWindow: SettingsWindowController
 
     var body: some View {
         if let url = model.serverURL {
@@ -34,11 +72,8 @@ struct MenuContent: View {
         Divider()
         Button(model.isServerActive ? "Stop Server" : "Start Server") { model.toggle() }
             .keyboardShortcut("s")
-        Button("Settings…") {
-            openWindow(id: "settings")
-            NSApp.activate()
-        }
-        .keyboardShortcut(",")
+        Button("Settings…") { settingsWindow.show() }
+            .keyboardShortcut(",")
         Divider()
         Button("Quit Flower") {
             model.stop()

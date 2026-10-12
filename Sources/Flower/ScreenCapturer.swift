@@ -1,7 +1,7 @@
 import CoreImage
 import CoreMedia
 import os
-import ScreenCaptureKit
+@preconcurrency import ScreenCaptureKit
 import FlowerCore
 
 enum CaptureError: LocalizedError {
